@@ -16,6 +16,10 @@ jobs:
     name: Run Cypress Tests
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: client
+
     steps:
       - name: 📥 Checkout do repositório
         uses: actions/checkout@v4
@@ -28,18 +32,25 @@ jobs:
       - name: 📦 Instalar dependências
         run: npm install
 
+      - name: 🏗️ Build da aplicação
+        run: npx tsc --skipLibCheck && npx vite build --mode development
+
       - name: 🧪 Executar testes Cypress
         uses: cypress-io/github-action@v6
         with:
           browser: chrome
           install: false
+          working-directory: client
+          start: npx vite preview --port 3000
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 60
 
       - name: 📊 Fazer upload dos screenshots (em caso de falha)
         uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: cypress-screenshots
-          path: cypress/screenshots
+          path: client/cypress/screenshots
           if-no-files-found: ignore
 
       - name: 🎥 Fazer upload dos vídeos
@@ -47,5 +58,5 @@ jobs:
         if: always()
         with:
           name: cypress-videos
-          path: cypress/videos
+          path: client/cypress/videos
           if-no-files-found: ignore
